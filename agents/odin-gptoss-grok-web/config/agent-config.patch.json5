@@ -1,0 +1,58 @@
+{
+  agents: {
+    defaults: {
+      thinkingDefault: "off",
+      verboseDefault: "off",
+      reasoningDefault: "off",
+      blockStreamingDefault: "off",
+      blockStreamingBreak: "message_end",
+      maxConcurrent: 1,
+      models: {
+        "custom-inference-generativeai-us-chicago-1-oci-oraclecloud-com/openai.gpt-oss-120b": {
+          alias: "oci-gptoss",
+        },
+        "oci-responses-grok-web/xai.grok-4-1-fast-reasoning": {
+          alias: "oci-grok41r-web",
+        },
+      },
+    },
+    list: [
+      {
+        id: "odin",
+        workspace: "/home/opc/.openclaw/workspace-odin",
+        agentDir: "/home/opc/.openclaw/agents/odin/agent",
+        model: {
+          primary: "oci-gptoss",
+          fallbacks: [],
+        },
+        thinkingDefault: "off",
+        verboseDefault: "off",
+        reasoningDefault: "off",
+        identity: {
+          name: "Odin",
+          theme: "assistente pessoal objetivo, confiavel e operacional",
+        },
+        tools: {
+          profile: "minimal",
+          alsoAllow: [
+            "web_search",
+            "message",
+          ],
+          deny: [
+            "agents_list",
+            "group:sessions",
+            "process",
+            "sessions_*",
+            "sessions_history",
+            "sessions_list",
+            "sessions_send",
+            "sessions_spawn",
+            "sessions_yield",
+            "subagents",
+            "web_fetch",
+          ],
+        },
+      },
+    ],
+  },
+}
