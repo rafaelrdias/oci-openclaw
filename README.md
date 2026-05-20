@@ -9,13 +9,13 @@ O perfil padrao deste deploy usa **Grok 4.1 Fast Reasoning com suporte a tools**
 - [Exemplo de servidor](#exemplo-de-servidor)
 - [Modelo principal do deploy](#modelo-principal-do-deploy)
 - [Pre-requisitos](#pre-requisitos)
+- [Infra OCI Provisionamento por CLI](#infra-oci-cli)
+- [Infra OCI Provisionamento via Terraform](#infra-oci-terraform)
 - [Instalacao no servidor](#instalacao-no-servidor)
 - [Credenciais e modelos](#credenciais-e-modelos)
 - [Gateway como servico](#gateway-como-servico)
 - [Canais](#canais)
 - [Operacao](#operacao)
-- [Infra OCI opcional](#infra-oci-opcional)
-- [Terraform para trial/ambiente novo](#terraform-para-trialambiente-novo)
 - [Agente Odin](#agente-odin)
 
 ## Exemplo de servidor
@@ -72,7 +72,34 @@ No servidor:
 - Saida HTTPS liberada para npm, GitHub, OCI Generative AI e provedores de canal.
 - Portas 22, 80 e 443 liberadas apenas se forem necessarias para SSH/Nginx/certificados.
 
+## Infra OCI opcional
+
+A criacao manual da infraestrutura OCI:
+
+[infra/oci-infra.md](infra/oci-infra.md)
+
+Use esse passo a passo quando quiser criar VCN, subnet publica, security list e VM manualmente ou via OCI CLI.
+
+## Terraform para trial/ambiente novo
+
+Um Terraform completo para criar uma infra, instala e configura o OpenClaw via cloud-init esta em:
+
+[infra/terraform/oci-trial-deploy/README.md](infra/terraform/oci-trial-deploy/README.md)
+
+Ele cria:
+
+- VCN;
+- Internet Gateway;
+- Route Table;
+- Security List;
+- Subnet publica;
+- VM Oracle Linux 9;
+- bootstrap com Node.js, OpenClaw, plugin Grok WebSearch, agente Odin e servico Gateway.
+
+As credenciais de LLM nao sao gravadas no Terraform state. O bootstrap cria arquivos de exemplo e deixa o servidor pronto para receber as chaves via SSH depois do `terraform apply`.
+
 ## Instalacao no servidor
+### Para VM já criada ou criada sem o Terraform
 
 Os comandos abaixo rodam dentro da VM como `opc`.
 
@@ -254,32 +281,6 @@ tar -czf "$HOME/openclaw-state-$(date +%Y%m%d-%H%M%S).tgz" \
   "$HOME/.openclaw/agents" \
   "$HOME/.openclaw/extensions"
 ```
-
-## Infra OCI opcional
-
-A criacao manual da infraestrutura OCI foi movida para:
-
-[infra/oci-infra.md](infra/oci-infra.md)
-
-Use esse arquivo quando quiser criar VCN, subnet publica, security list e VM manualmente ou via OCI CLI. O README principal assume que a VM ja existe.
-
-## Terraform para trial/ambiente novo
-
-Um Terraform completo para criar uma infra nova de trial e executar o maximo possivel do bootstrap via cloud-init esta em:
-
-[infra/terraform/oci-trial-deploy/README.md](infra/terraform/oci-trial-deploy/README.md)
-
-Ele cria:
-
-- VCN;
-- Internet Gateway;
-- Route Table;
-- Security List;
-- Subnet publica;
-- VM Oracle Linux 9;
-- bootstrap com Node.js, OpenClaw, plugin Grok WebSearch, agente Odin e servico Gateway.
-
-As credenciais de LLM nao sao gravadas no Terraform state. O bootstrap cria arquivos de exemplo e deixa o servidor pronto para receber as chaves via SSH depois do `terraform apply`.
 
 ## Agente Odin
 
