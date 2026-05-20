@@ -16,9 +16,15 @@ variable "prefix" {
 }
 
 variable "ssh_public_key_path" {
-  description = "Path to the public SSH key authorized for opc."
+  description = "Path to the public SSH key authorized for opc. Used by Terraform CLI when ssh_public_key is empty."
   type        = string
   default     = "~/.ssh/id_rsa.pub"
+}
+
+variable "ssh_public_key" {
+  description = "Public SSH key authorized for opc. Prefer this when running from OCI Resource Manager Console."
+  type        = string
+  default     = ""
 }
 
 variable "ssh_allowed_cidr" {

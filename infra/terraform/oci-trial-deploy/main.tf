@@ -1,5 +1,6 @@
 locals {
   ssh_public_key_path = pathexpand(var.ssh_public_key_path)
+  ssh_public_key      = var.ssh_public_key != "" ? var.ssh_public_key : file(local.ssh_public_key_path)
   image_id            = var.image_ocid != "" ? var.image_ocid : data.oci_core_images.oracle_linux.images[0].id
 }
 
@@ -119,7 +120,7 @@ resource "oci_core_instance" "openclaw" {
   }
 
   metadata = {
-    ssh_authorized_keys = file(local.ssh_public_key_path)
+    ssh_authorized_keys = local.ssh_public_key
     user_data = base64encode(templatefile("${path.module}/cloud-init.yaml.tftpl", {
       gateway_port       = var.gateway_port
       openclaw_version   = var.openclaw_npm_version
@@ -127,11 +128,11 @@ resource "oci_core_instance" "openclaw" {
       grok_model_id      = var.grok_model_id
       gptoss_model_id    = var.gptoss_model_id
       install_nginx      = var.install_nginx ? "true" : "false"
-      plugin_index_b64   = base64encode(file("${path.module}/../../../agents/odin-gptoss-grok-web/plugins/oci-responses-grok-web/index.js"))
-      plugin_package_b64 = base64encode(file("${path.module}/../../../agents/odin-gptoss-grok-web/plugins/oci-responses-grok-web/package.json"))
-      agent_patch_b64    = base64encode(file("${path.module}/../../../agents/odin-gptoss-grok-web/config/agent-config.patch.json5"))
-      agent_identity_b64 = base64encode(file("${path.module}/../../../agents/odin-gptoss-grok-web/workspace/IDENTITY.md"))
-      agent_md_b64       = base64encode(file("${path.module}/../../../agents/odin-gptoss-grok-web/workspace/AGENTS.md"))
+      plugin_index_b64   = base64encode(file("${path.module}/assets/plugin/index.js"))
+      plugin_package_b64 = base64encode(file("${path.module}/assets/plugin/package.json"))
+      agent_patch_b64    = base64encode(file("${path.module}/assets/agent/config/agent-config.patch.json5"))
+      agent_identity_b64 = base64encode(file("${path.module}/assets/agent/workspace/IDENTITY.md"))
+      agent_md_b64       = base64encode(file("${path.module}/assets/agent/workspace/AGENTS.md"))
     }))
   }
 }
