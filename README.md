@@ -72,7 +72,7 @@ No servidor:
 - Saida HTTPS liberada para npm, GitHub, OCI Generative AI e provedores de canal.
 - Portas 22, 80 e 443 liberadas apenas se forem necessarias para SSH/Nginx/certificados.
 
-## Infra OCI opcional
+## Infra OCI Provisionamento por CLI
 
 A criacao manual da infraestrutura OCI:
 
@@ -80,7 +80,7 @@ A criacao manual da infraestrutura OCI:
 
 Use esse passo a passo quando quiser criar VCN, subnet publica, security list e VM manualmente ou via OCI CLI.
 
-## Terraform para trial/ambiente novo
+## Infra OCI Provisionamento via Terraform
 
 Um Terraform completo para criar uma infra, instala e configura o OpenClaw via cloud-init esta em:
 
