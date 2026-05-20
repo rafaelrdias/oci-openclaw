@@ -1,0 +1,139 @@
+#cloud-config
+package_update: true
+package_upgrade: false
+
+packages:
+  - git
+  - curl
+  - jq
+  - unzip
+  - tar
+  - firewalld
+
+write_files:
+  - path: /tmp/oci-responses-grok-web.index.js
+    owner: root:root
+    permissions: "0644"
+    encoding: b64
+    content: ${plugin_index_b64}
+  - path: /tmp/oci-responses-grok-web.package.json
+    owner: root:root
+    permissions: "0644"
+    encoding: b64
+    content: ${plugin_package_b64}
+  - path: /tmp/odin-agent-config.patch.json5
+    owner: root:root
+    permissions: "0644"
+    encoding: b64
+    content: ${agent_patch_b64}
+  - path: /tmp/odin-IDENTITY.md
+    owner: root:root
+    permissions: "0644"
+    encoding: b64
+    content: ${agent_identity_b64}
+  - path: /tmp/odin-AGENTS.md
+    owner: root:root
+    permissions: "0644"
+    encoding: b64
+    content: ${agent_md_b64}
+  - path: /tmp/openclaw-bootstrap.sh
+    owner: root:root
+    permissions: "0755"
+    content: |
+      #!/usr/bin/env bash
+      set -euxo pipefail
+
+      if ! command -v node >/dev/null 2>&1; then
+        curl -fsSL https://rpm.nodesource.com/setup_22.x -o /tmp/nodesource_setup.sh
+        bash /tmp/nodesource_setup.sh
+        dnf install -y nodejs
+      fi
+
+      if [ "${install_nginx}" = "true" ]; then
+        dnf install -y nginx
+        systemctl enable --now nginx
+      fi
+
+      systemctl enable --now firewalld
+      firewall-cmd --permanent --add-service=ssh
+      firewall-cmd --permanent --add-service=http
+      firewall-cmd --permanent --add-service=https
+      firewall-cmd --reload
+
+      loginctl enable-linger opc
+
+      install -d -o opc -g opc /home/opc/.npm-global
+      install -d -o opc -g opc /home/opc/bin
+      install -d -o opc -g opc /home/opc/.openclaw
+      install -d -o opc -g opc /home/opc/openclaw-plugins/oci-responses-grok-web
+      install -d -o opc -g opc /home/opc/.openclaw/workspace-odin
+      install -d -o opc -g opc /home/opc/.openclaw/agents/odin/agent
+      install -d -o opc -g opc /home/opc/openclaw-bootstrap
+
+      install -m 0644 -o opc -g opc /tmp/oci-responses-grok-web.index.js \
+        /home/opc/openclaw-plugins/oci-responses-grok-web/index.js
+      install -m 0644 -o opc -g opc /tmp/oci-responses-grok-web.package.json \
+        /home/opc/openclaw-plugins/oci-responses-grok-web/package.json
+      install -m 0644 -o opc -g opc /tmp/odin-agent-config.patch.json5 \
+        /home/opc/openclaw-bootstrap/agent-config.patch.json5
+      install -m 0644 -o opc -g opc /tmp/odin-IDENTITY.md \
+        /home/opc/.openclaw/workspace-odin/IDENTITY.md
+      install -m 0644 -o opc -g opc /tmp/odin-AGENTS.md \
+        /home/opc/.openclaw/workspace-odin/AGENTS.md
+
+      cat > /home/opc/.openclaw/gateway.systemd.env <<'ENV'
+      OCI_RESPONSES_REGION=${oci_region}
+
+      # Add secrets after provisioning. Do not commit this file.
+      # OCI_RESPONSES_API_KEY=<your-oci-responses-api-key>
+      # OPENAI_API_KEY=<optional-openai-compatible-key>
+      # OPENAI_BASE_URL=https://inference.generativeai.${oci_region}.oci.oraclecloud.com/20231130/actions/v1
+      # OCI_RESPONSES_PROJECT_OCID=<optional-project-ocid>
+      ENV
+      chown opc:opc /home/opc/.openclaw/gateway.systemd.env
+      chmod 600 /home/opc/.openclaw/gateway.systemd.env
+
+      if ! grep -q '.npm-global/bin' /home/opc/.bashrc; then
+        cat >> /home/opc/.bashrc <<'EOF'
+      export PATH="$HOME/.npm-global/bin:$HOME/bin:$PATH"
+      EOF
+        chown opc:opc /home/opc/.bashrc
+      fi
+
+      sudo -u opc -H bash -lc '
+        set -euxo pipefail
+        export PATH="$HOME/.npm-global/bin:$HOME/bin:$PATH"
+        npm config set prefix "$HOME/.npm-global"
+        npm install -g openclaw@${openclaw_version}
+        openclaw --version
+        openclaw setup --non-interactive || true
+        openclaw plugins install "$HOME/openclaw-plugins/oci-responses-grok-web" --force || true
+        openclaw plugins enable oci-responses-grok-web || true
+        openclaw models aliases add oci-grok41r-web oci-responses-grok-web/${grok_model_id} || true
+        openclaw models aliases add oci-gptoss ${gptoss_model_id} || true
+        openclaw models set oci-grok41r-web || true
+        openclaw agents add odin \
+          --workspace "$HOME/.openclaw/workspace-odin" \
+          --agent-dir "$HOME/.openclaw/agents/odin/agent" \
+          --model oci-grok41r-web \
+          --non-interactive \
+          --json || true
+        openclaw agents set-identity \
+          --agent odin \
+          --identity-file "$HOME/.openclaw/workspace-odin/IDENTITY.md" \
+          --json || true
+        openclaw config patch --file "$HOME/openclaw-bootstrap/agent-config.patch.json5" || true
+        openclaw gateway install --port ${gateway_port} --runtime node --force
+        openclaw config validate || true
+        openclaw gateway start || true
+      '
+
+      sudo -u opc -H bash -lc '
+        export PATH="$HOME/.npm-global/bin:$HOME/bin:$PATH"
+        openclaw gateway status || true
+        openclaw agents list --json || true
+        openclaw models list --status-plain || true
+      '
+
+runcmd:
+  - [bash, /tmp/openclaw-bootstrap.sh]

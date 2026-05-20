@@ -1,9 +1,9 @@
 {
   agents: {
     defaults: {
-      thinkingDefault: "off",
+      thinkingDefault: "medium",
       verboseDefault: "off",
-      reasoningDefault: "off",
+      reasoningDefault: "medium",
       blockStreamingDefault: "off",
       blockStreamingBreak: "message_end",
       maxConcurrent: 1,
@@ -22,12 +22,14 @@
         workspace: "/home/opc/.openclaw/workspace-odin",
         agentDir: "/home/opc/.openclaw/agents/odin/agent",
         model: {
-          primary: "oci-gptoss",
-          fallbacks: [],
+          primary: "oci-grok41r-web",
+          fallbacks: [
+            "oci-gptoss",
+          ],
         },
-        thinkingDefault: "off",
+        thinkingDefault: "medium",
         verboseDefault: "off",
-        reasoningDefault: "off",
+        reasoningDefault: "medium",
         identity: {
           name: "Odin",
           theme: "assistente pessoal objetivo, confiavel e operacional",

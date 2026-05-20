@@ -1,0 +1,22 @@
+region              = "us-chicago-1"
+compartment_ocid    = "ocid1.compartment.oc1..example"
+prefix              = "openclaw-trial"
+ssh_public_key_path = "~/.ssh/id_rsa.pub"
+
+# Prefer your public IP with /32.
+ssh_allowed_cidr = "0.0.0.0/0"
+
+# Adjust for trial availability in your region.
+instance_shape         = "VM.Standard.E5.Flex"
+instance_ocpus         = 2
+instance_memory_in_gbs = 16
+boot_volume_size_gbs   = 80
+
+gateway_port        = 18789
+openclaw_npm_version = "latest"
+oci_responses_region = "us-chicago-1"
+
+grok_model_id   = "xai.grok-4-1-fast-reasoning"
+gptoss_model_id = "custom-inference-generativeai-us-chicago-1-oci-oraclecloud-com/openai.gpt-oss-120b"
+
+install_nginx = true

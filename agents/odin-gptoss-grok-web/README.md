@@ -1,9 +1,11 @@
-# Agente Odin com GPT-OSS e Grok WebSearch
+# Agente Odin com Grok 4.1 Fast Reasoning e WebSearch
 
-Este guia cria um agente inspirado no Odin do servidor atual:
+Este guia cria um agente inspirado no Odin para um deploy OpenClaw generico:
 
-- LLM principal: `oci-gptoss`, alias para `openai.gpt-oss-120b` via OCI Generative AI.
-- Ferramenta de busca web: `web_search` usando o provider `oci-grok-web`, implementado pelo plugin `oci-responses-grok-web`.
+- LLM principal: `oci-grok41r-web`, alias para `oci-responses-grok-web/xai.grok-4-1-fast-reasoning`.
+- Raciocinio: habilitado no cadastro do modelo do plugin.
+- Tools: habilitadas via OCI Responses, incluindo `web_search`.
+- Fallback/opcional: `oci-gptoss`, alias para `openai.gpt-oss-120b` via OCI Generative AI.
 - Sem STT e sem TTS nesta versao.
 
 Os comandos abaixo rodam no servidor OpenClaw como usuario `opc`.
@@ -17,7 +19,7 @@ openclaw gateway status
 openclaw models list --status-plain
 ```
 
-O ambiente de referencia usa OpenClaw `2026.5.4`.
+Use OpenClaw `2026.5.4` ou superior.
 
 ## 2. Configurar credenciais no servico
 
@@ -37,20 +39,25 @@ chmod 600 "$HOME/.openclaw/gateway.systemd.env"
 openclaw gateway restart
 ```
 
-Valide que o modelo GPT-OSS aparece na lista:
+Valide os modelos disponiveis:
 
 ```bash
 openclaw models list --status-plain
 ```
 
-Crie ou atualize o alias:
+Crie ou atualize os aliases:
 
 ```bash
+openclaw models aliases add oci-grok41r-web \
+  oci-responses-grok-web/xai.grok-4-1-fast-reasoning
+
 openclaw models aliases add oci-gptoss \
   custom-inference-generativeai-us-chicago-1-oci-oraclecloud-com/openai.gpt-oss-120b
+
+openclaw models set oci-grok41r-web
 ```
 
-Se o seu tenancy retornar outro ID para o GPT-OSS, substitua o ID acima pelo valor exato retornado no `models list`.
+Se o seu tenancy retornar outros IDs, substitua os IDs acima pelos valores exatos retornados no `models list`.
 
 ## 3. Instalar o plugin Grok WebSearch
 
@@ -112,7 +119,7 @@ Caso esteja seguindo manualmente, crie os arquivos com o conteudo dos exemplos d
 openclaw agents add odin \
   --workspace "$ODIN_WORKSPACE" \
   --agent-dir "$ODIN_AGENT_DIR" \
-  --model oci-gptoss \
+  --model oci-grok41r-web \
   --non-interactive \
   --json
 
@@ -122,7 +129,7 @@ openclaw agents set-identity \
   --json
 ```
 
-Depois aplique a configuracao de ferramentas. O perfil abaixo libera `web_search`, mantem execucao minima e desliga verbose/reasoning por padrao para evitar respostas intermediarias em excesso.
+Depois aplique a configuracao de ferramentas. O perfil abaixo libera `web_search`, mantem execucao minima e desliga verbose por padrao para evitar respostas intermediarias em excesso.
 
 ```bash
 openclaw config patch --stdin < agents/odin-gptoss-grok-web/config/agent-config.patch.json5
@@ -202,4 +209,5 @@ journalctl --user -u openclaw-gateway.service -f
 - O plugin usa `OCI_RESPONSES_API_KEY` e `OCI_RESPONSES_REGION`; mantenha essas variaveis no `gateway.systemd.env`.
 - O provider de WebSearch registrado pelo plugin se chama `oci-grok-web`.
 - O modelo exposto pelo plugin se chama `oci-responses-grok-web/xai.grok-4-1-fast-reasoning`.
+- O alias `oci-grok41r-web` e o modelo principal do agente neste deploy.
 - Se o OpenClaw nao encontrar o provider, rode `openclaw plugins install ... --force`, reinicie o gateway e valide com `openclaw plugins list`.

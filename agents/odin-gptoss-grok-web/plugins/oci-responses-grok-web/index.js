@@ -50,7 +50,7 @@ function buildModel() {
     provider: PROVIDER_ID,
     api: "openai-responses",
     baseUrl: getBaseUrl(),
-    reasoning: false,
+    reasoning: { effort: "medium" },
     input: ["text", "image"],
     cost: {
       input: 0,
