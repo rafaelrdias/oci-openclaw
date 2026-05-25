@@ -1,0 +1,97 @@
+{
+  "id": "oci-responses-grok-web",
+  "name": "OCI Responses Grok Web",
+  "version": "0.1.6",
+  "description": "OCI Generative AI Responses provider for Grok 4.1 Fast Reasoning with web_search support.",
+  "enabledByDefault": true,
+  "activation": {
+    "onStartup": true
+  },
+  "providers": [
+    "oci-responses-grok-web"
+  ],
+  "providerEndpoints": [
+    {
+      "endpointClass": "openai-compatible",
+      "hostSuffixes": [
+        "oci.oraclecloud.com"
+      ]
+    }
+  ],
+  "providerAuthEnvVars": {
+    "oci-responses-grok-web": [
+      "OCI_RESPONSES_API_KEY",
+      "OPENAI_API_KEY"
+    ]
+  },
+  "setup": {
+    "providers": [
+      {
+        "id": "oci-responses-grok-web",
+        "authMethods": [
+          "api-key"
+        ],
+        "envVars": [
+          "OCI_RESPONSES_API_KEY",
+          "OPENAI_API_KEY"
+        ]
+      }
+    ]
+  },
+  "contracts": {
+    "webSearchProviders": [
+      "oci-grok-web"
+    ]
+  },
+  "uiHints": {
+    "webSearch.apiKey": {
+      "label": "OCI Responses API Key",
+      "help": "OCI Generative AI / Enterprise AI API key used by Grok web_search.",
+      "sensitive": true
+    },
+    "webSearch.model": {
+      "label": "OCI Responses Model",
+      "help": "Optional model override for OCI Responses web_search."
+    },
+    "webSearch.baseUrl": {
+      "label": "OCI Responses Base URL",
+      "help": "Optional OCI Responses/OpenAI-compatible base URL override."
+    }
+  },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "webSearch": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "apiKey": {
+            "type": [
+              "string",
+              "object"
+            ]
+          },
+          "region": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string"
+          },
+          "baseUrl": {
+            "type": "string"
+          },
+          "timeoutSeconds": {
+            "type": "number"
+          },
+          "cacheTtlMinutes": {
+            "type": "number"
+          },
+          "maxResults": {
+            "type": "number"
+          }
+        }
+      }
+    }
+  }
+}

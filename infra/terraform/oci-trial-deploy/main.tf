@@ -121,17 +121,18 @@ resource "oci_core_instance" "openclaw" {
   metadata = {
     ssh_authorized_keys = local.ssh_public_key
     user_data = base64encode(templatefile("${path.module}/cloud-init.yaml.tftpl", {
-      gateway_port       = var.gateway_port
-      openclaw_version   = var.openclaw_npm_version
-      oci_region         = var.oci_responses_region
-      grok_model_id      = var.grok_model_id
-      gptoss_model_id    = var.gptoss_model_id
-      install_nginx      = var.install_nginx ? "true" : "false"
-      plugin_index_b64   = base64gzip(file("${path.module}/assets/plugin/index.js"))
-      plugin_package_b64 = base64gzip(file("${path.module}/assets/plugin/package.json"))
-      agent_patch_b64    = base64gzip(file("${path.module}/assets/agent/config/agent-config.patch.json5"))
-      agent_identity_b64 = base64gzip(file("${path.module}/assets/agent/workspace/IDENTITY.md"))
-      agent_md_b64       = base64gzip(file("${path.module}/assets/agent/workspace/AGENTS.md"))
+      gateway_port        = var.gateway_port
+      openclaw_version    = var.openclaw_npm_version
+      oci_region          = var.oci_responses_region
+      grok_model_id       = var.grok_model_id
+      gptoss_model_id     = var.gptoss_model_id
+      install_nginx       = var.install_nginx ? "true" : "false"
+      plugin_index_b64    = base64gzip(file("${path.module}/assets/plugin/index.js"))
+      plugin_package_b64  = base64gzip(file("${path.module}/assets/plugin/package.json"))
+      plugin_manifest_b64 = base64gzip(file("${path.module}/assets/plugin/openclaw.plugin.json"))
+      agent_patch_b64     = base64gzip(file("${path.module}/assets/agent/config/agent-config.patch.json5"))
+      agent_identity_b64  = base64gzip(file("${path.module}/assets/agent/workspace/IDENTITY.md"))
+      agent_md_b64        = base64gzip(file("${path.module}/assets/agent/workspace/AGENTS.md"))
     }))
   }
 }

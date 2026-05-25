@@ -21,6 +21,11 @@ write_files:
     permissions: "0644"
     encoding: gz+b64
     content: ${plugin_package_b64}
+  - path: /tmp/oci-responses-grok-web.openclaw.plugin.json
+    owner: root:root
+    permissions: "0644"
+    encoding: gz+b64
+    content: ${plugin_manifest_b64}
   - path: /tmp/odin-agent-config.patch.json5
     owner: root:root
     permissions: "0644"
@@ -74,12 +79,16 @@ write_files:
         /home/opc/openclaw-plugins/oci-responses-grok-web/index.js
       install -m 0644 -o opc -g opc /tmp/oci-responses-grok-web.package.json \
         /home/opc/openclaw-plugins/oci-responses-grok-web/package.json
+      install -m 0644 -o opc -g opc /tmp/oci-responses-grok-web.openclaw.plugin.json \
+        /home/opc/openclaw-plugins/oci-responses-grok-web/openclaw.plugin.json
       install -m 0644 -o opc -g opc /tmp/odin-agent-config.patch.json5 \
         /home/opc/openclaw-bootstrap/agent-config.patch.json5
       install -m 0644 -o opc -g opc /tmp/odin-IDENTITY.md \
         /home/opc/.openclaw/workspace-odin/IDENTITY.md
       install -m 0644 -o opc -g opc /tmp/odin-AGENTS.md \
         /home/opc/.openclaw/workspace-odin/AGENTS.md
+
+      chown -R opc:opc /home/opc/.openclaw /home/opc/openclaw-plugins /home/opc/openclaw-bootstrap
 
       cat > /home/opc/.openclaw/gateway.systemd.env <<'ENV'
       OCI_RESPONSES_REGION=${oci_region}
