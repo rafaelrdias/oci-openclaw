@@ -20,6 +20,7 @@ excluded_dirs = {".terraform", "dist"}
 excluded_names = {
     "terraform.tfvars",
     "crash.log",
+    ".DS_Store",
 }
 excluded_suffixes = (
     ".tfstate",

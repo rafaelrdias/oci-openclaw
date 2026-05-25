@@ -29,6 +29,8 @@ Vantagens:
 - o `.zip` fica self-contained, com Terraform, cloud-init e assets do agente/plugin;
 - fica mais facil repetir o deploy em outro compartment.
 
+O Resource Manager suporta Terraform `1.5.x` como versao atual. Por isso o modulo usa `required_version = ">= 1.5.0, < 2.0.0"`: essa faixa aceita o Terraform `1.5.x` da OCI Console e tambem permite validar localmente com Terraform CLI `1.x`.
+
 ## Pre-requisitos
 
 - Terraform instalado.
@@ -65,7 +67,8 @@ Esse ZIP contem os `.tf`, o `cloud-init.yaml.tftpl` e os assets necessarios para
 6. Faca upload de `dist/oci-trial-resource-manager.zip`.
 7. Informe um nome, por exemplo `openclaw-trial`.
 8. Confirme o compartment correto.
-9. Avance ate **Configure variables** e preencha:
+9. Em **Terraform version**, selecione `1.5.x` quando a Console exibir essa opcao.
+10. Avance ate **Configure variables** e preencha:
    - `region`;
    - `compartment_ocid`;
    - `prefix`;
@@ -73,11 +76,11 @@ Esse ZIP contem os `.tf`, o `cloud-init.yaml.tftpl` e os assets necessarios para
    - `ssh_public_key`;
    - `ssh_allowed_cidr`, preferencialmente seu IP publico com `/32`;
    - shape, OCPUs e memoria conforme sua quota de trial.
-10. Clique em **Create**.
-11. Abra a stack criada e clique em **Plan**.
-12. Revise o plano.
-13. Clique em **Apply**.
-14. Ao final do job, abra **Outputs** e copie `public_ip` ou `ssh_command`.
+11. Clique em **Create**.
+12. Abra a stack criada e clique em **Plan**.
+13. Revise o plano.
+14. Clique em **Apply**.
+15. Ao final do job, abra **Outputs** e copie `public_ip` ou `ssh_command`.
 
 Para uso pela Console, prefira preencher `ssh_public_key` diretamente na tela de variaveis. O campo `ssh_public_key_path` existe para execucao local com Terraform CLI.
 
