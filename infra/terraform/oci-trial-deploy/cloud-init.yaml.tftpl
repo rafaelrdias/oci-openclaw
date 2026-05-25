@@ -14,27 +14,27 @@ write_files:
   - path: /tmp/oci-responses-grok-web.index.js
     owner: root:root
     permissions: "0644"
-    encoding: b64
+    encoding: gz+b64
     content: ${plugin_index_b64}
   - path: /tmp/oci-responses-grok-web.package.json
     owner: root:root
     permissions: "0644"
-    encoding: b64
+    encoding: gz+b64
     content: ${plugin_package_b64}
   - path: /tmp/odin-agent-config.patch.json5
     owner: root:root
     permissions: "0644"
-    encoding: b64
+    encoding: gz+b64
     content: ${agent_patch_b64}
   - path: /tmp/odin-IDENTITY.md
     owner: root:root
     permissions: "0644"
-    encoding: b64
+    encoding: gz+b64
     content: ${agent_identity_b64}
   - path: /tmp/odin-AGENTS.md
     owner: root:root
     permissions: "0644"
-    encoding: b64
+    encoding: gz+b64
     content: ${agent_md_b64}
   - path: /tmp/openclaw-bootstrap.sh
     owner: root:root

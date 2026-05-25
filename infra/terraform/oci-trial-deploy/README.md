@@ -210,6 +210,7 @@ terraform destroy
 - A Security List abre SSH, HTTP e HTTPS. Restrinja `ssh_allowed_cidr` ao seu IP sempre que possivel.
 - As credenciais de LLM devem ser inseridas depois do provisionamento, por SSH.
 - Se a shape de trial nao estiver disponivel na regiao, ajuste `instance_shape`, `instance_ocpus` e `instance_memory_in_gbs`.
+- O cloud-init usa `gz+b64` nos assets do plugin/agente para manter o `metadata.user_data` abaixo do limite de 32 KB da OCI.
 
 ## Referencias
 

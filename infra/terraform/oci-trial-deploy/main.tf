@@ -127,11 +127,11 @@ resource "oci_core_instance" "openclaw" {
       grok_model_id      = var.grok_model_id
       gptoss_model_id    = var.gptoss_model_id
       install_nginx      = var.install_nginx ? "true" : "false"
-      plugin_index_b64   = base64encode(file("${path.module}/assets/plugin/index.js"))
-      plugin_package_b64 = base64encode(file("${path.module}/assets/plugin/package.json"))
-      agent_patch_b64    = base64encode(file("${path.module}/assets/agent/config/agent-config.patch.json5"))
-      agent_identity_b64 = base64encode(file("${path.module}/assets/agent/workspace/IDENTITY.md"))
-      agent_md_b64       = base64encode(file("${path.module}/assets/agent/workspace/AGENTS.md"))
+      plugin_index_b64   = base64gzip(file("${path.module}/assets/plugin/index.js"))
+      plugin_package_b64 = base64gzip(file("${path.module}/assets/plugin/package.json"))
+      agent_patch_b64    = base64gzip(file("${path.module}/assets/agent/config/agent-config.patch.json5"))
+      agent_identity_b64 = base64gzip(file("${path.module}/assets/agent/workspace/IDENTITY.md"))
+      agent_md_b64       = base64gzip(file("${path.module}/assets/agent/workspace/AGENTS.md"))
     }))
   }
 }
