@@ -15,16 +15,14 @@ variable "prefix" {
   default     = "openclaw-trial"
 }
 
-variable "ssh_public_key_path" {
-  description = "Path to the public SSH key authorized for opc. Used by Terraform CLI when ssh_public_key is empty."
-  type        = string
-  default     = "~/.ssh/id_rsa.pub"
-}
-
 variable "ssh_public_key" {
-  description = "Public SSH key authorized for opc. Prefer this when running from OCI Resource Manager Console."
+  description = "Public SSH key authorized for opc. Paste the contents of your .pub file; keep the matching private key outside Terraform."
   type        = string
-  default     = ""
+
+  validation {
+    condition     = can(regex("^(ssh-rsa|ssh-ed25519|ecdsa-sha2-[^ ]+|sk-ssh-ed25519@openssh.com|sk-ecdsa-sha2-nistp256@openssh.com) [A-Za-z0-9+/=]+", trimspace(var.ssh_public_key)))
+    error_message = "ssh_public_key must be a valid OpenSSH public key, for example: ssh-ed25519 AAAAC3... openclaw-trial"
+  }
 }
 
 variable "ssh_allowed_cidr" {

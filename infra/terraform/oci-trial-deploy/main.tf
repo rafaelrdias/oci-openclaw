@@ -1,7 +1,6 @@
 locals {
-  ssh_public_key_path = pathexpand(var.ssh_public_key_path)
-  ssh_public_key      = var.ssh_public_key != "" ? var.ssh_public_key : file(local.ssh_public_key_path)
-  image_id            = var.image_ocid != "" ? var.image_ocid : data.oci_core_images.oracle_linux.images[0].id
+  ssh_public_key = trimspace(var.ssh_public_key)
+  image_id       = var.image_ocid != "" ? var.image_ocid : data.oci_core_images.oracle_linux.images[0].id
 }
 
 data "oci_identity_availability_domains" "ads" {

@@ -33,11 +33,40 @@ O Resource Manager suporta Terraform `1.5.x` como versao atual. Por isso o modul
 
 ## Pre-requisitos
 
-- Terraform instalado.
-- OCI provider autenticado via `~/.oci/config`, Resource Principal, Instance Principal ou variaveis de ambiente aceitas pelo provider.
+- Acesso a OCI Console com permissao para criar stack no Resource Manager.
 - OCID do compartment.
-- Chave SSH publica local.
+- Par de chaves SSH proprio para acessar a VM como usuario `opc`.
 - Quota de trial suficiente para a shape escolhida.
+- Para uso alternativo via Terraform CLI: Terraform instalado e OCI provider autenticado via `~/.oci/config`, Resource Principal, Instance Principal ou variaveis de ambiente aceitas pelo provider.
+
+## Acesso SSH
+
+O ZIP nao contem chave SSH e nao deve conter. A chave privada precisa ficar somente com voce; o Terraform recebe apenas a chave publica e grava essa chave na VM para o usuario `opc`.
+
+Se ainda nao tiver um par de chaves especifico para este ambiente, gere antes de criar a stack:
+
+```bash
+mkdir -p "$HOME/.ssh"
+ssh-keygen -t ed25519 -C "openclaw-trial" -f "$HOME/.ssh/openclaw_trial"
+cat "$HOME/.ssh/openclaw_trial.pub"
+```
+
+Copie a linha exibida pelo `cat` e cole inteira na variavel `ssh_public_key` da OCI Console. Ela tera um formato parecido com:
+
+```text
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAI... openclaw-trial
+```
+
+Guarde a chave privada em `~/.ssh/openclaw_trial`. Ela sera usada depois para conectar:
+
+```bash
+chmod 600 "$HOME/.ssh/openclaw_trial"
+ssh -i "$HOME/.ssh/openclaw_trial" opc@<public_ip>
+```
+
+Se voce ja tiver uma chave existente, pode usar o conteudo do arquivo `.pub` correspondente, por exemplo `cat ~/.ssh/id_ed25519.pub`, e acessar depois com a chave privada par, por exemplo `ssh -i ~/.ssh/id_ed25519 opc@<public_ip>`.
+
+Nao gere a chave privada dentro do Terraform. Isso colocaria a chave no Terraform state, o que aumenta muito o risco de exposicao.
 
 ## Gerar o ZIP para a Console
 
@@ -72,8 +101,7 @@ Esse ZIP contem os `.tf`, o `cloud-init.yaml.tftpl` e os assets necessarios para
    - `region`;
    - `compartment_ocid`;
    - `prefix`;
-   - `ssh_public_key_path` nao deve ser usado na Console se o arquivo local nao existir no ambiente do Resource Manager;
-   - `ssh_public_key`;
+   - `ssh_public_key` com o conteudo completo do arquivo `.pub`;
    - `ssh_allowed_cidr`, preferencialmente seu IP publico com `/32`;
    - shape, OCPUs e memoria conforme sua quota de trial.
 11. Clique em **Create**.
@@ -82,12 +110,12 @@ Esse ZIP contem os `.tf`, o `cloud-init.yaml.tftpl` e os assets necessarios para
 14. Clique em **Apply**.
 15. Ao final do job, abra **Outputs** e copie `public_ip` ou `ssh_command`.
 
-Para uso pela Console, prefira preencher `ssh_public_key` diretamente na tela de variaveis. O campo `ssh_public_key_path` existe para execucao local com Terraform CLI.
+Se `ssh_public_key` ficar vazio ou em formato invalido, o `plan`/`apply` falhara antes de criar a VM. Isso e intencional para evitar uma instancia sem acesso SSH conhecido.
 
 Depois do apply:
 
 ```bash
-ssh opc@<public_ip>
+ssh -i "$HOME/.ssh/openclaw_trial" opc@<public_ip>
 sudo tail -f /var/log/cloud-init-output.log
 ```
 
@@ -140,7 +168,7 @@ Depois do apply:
 
 ```bash
 terraform output ssh_command
-ssh opc@$(terraform output -raw public_ip)
+ssh -i "$HOME/.ssh/openclaw_trial" opc@$(terraform output -raw public_ip)
 ```
 
 No servidor, acompanhe o bootstrap:

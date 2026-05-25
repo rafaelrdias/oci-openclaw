@@ -9,8 +9,8 @@ output "public_ip" {
 }
 
 output "ssh_command" {
-  description = "SSH command for the opc user."
-  value       = "ssh opc@${oci_core_instance.openclaw.public_ip}"
+  description = "SSH command template for the opc user. Replace <private-key-file> with the private key paired with ssh_public_key."
+  value       = "ssh -i <private-key-file> opc@${oci_core_instance.openclaw.public_ip}"
 }
 
 output "gateway_url" {
@@ -21,7 +21,7 @@ output "gateway_url" {
 output "post_bootstrap_next_steps" {
   description = "Commands to run after cloud-init finishes."
   value = [
-    "ssh opc@${oci_core_instance.openclaw.public_ip}",
+    "ssh -i <private-key-file> opc@${oci_core_instance.openclaw.public_ip}",
     "sudo tail -f /var/log/cloud-init-output.log",
     "nano ~/.openclaw/gateway.systemd.env",
     "openclaw gateway restart",

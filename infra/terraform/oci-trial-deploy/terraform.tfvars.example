@@ -1,11 +1,7 @@
 region              = "us-chicago-1"
 compartment_ocid    = "ocid1.compartment.oc1..example"
 prefix              = "openclaw-trial"
-ssh_public_key_path = "~/.ssh/id_rsa.pub"
-
-# For OCI Resource Manager Console, paste the public key here and leave
-# ssh_public_key_path unchanged.
-# ssh_public_key = "ssh-rsa AAAA..."
+ssh_public_key      = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIexample openclaw-trial"
 
 # Prefer your public IP with /32.
 ssh_allowed_cidr = "0.0.0.0/0"
