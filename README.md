@@ -9,13 +9,14 @@ O perfil padrao deste deploy usa **Grok 4.1 Fast Reasoning com suporte a tools**
 - [Exemplo de servidor](#exemplo-de-servidor)
 - [Modelo principal do deploy](#modelo-principal-do-deploy)
 - [Pre-requisitos](#pre-requisitos)
-- [Infra OCI Provisionamento por CLI](#infra-oci-provisionamento-por-cli)
-- [Infra OCI Provisionamento via Terraform](#infra-oci-provisionamento-via-terraform])
 - [Instalacao no servidor](#instalacao-no-servidor)
 - [Credenciais e modelos](#credenciais-e-modelos)
 - [Gateway como servico](#gateway-como-servico)
 - [Canais](#canais)
 - [Operacao](#operacao)
+- [Infra OCI opcional](#infra-oci-opcional)
+- [Terraform para trial/ambiente novo](#terraform-para-trialambiente-novo)
+- [Pos-deploy apos acesso SSH](#pos-deploy-apos-acesso-ssh)
 - [Agente Odin](#agente-odin)
 
 ## Exemplo de servidor
@@ -72,34 +73,7 @@ No servidor:
 - Saida HTTPS liberada para npm, GitHub, OCI Generative AI e provedores de canal.
 - Portas 22, 80 e 443 liberadas apenas se forem necessarias para SSH/Nginx/certificados.
 
-## Infra OCI Provisionamento por CLI
-
-A criacao manual da infraestrutura OCI:
-
-[infra/oci-infra.md](infra/oci-infra.md)
-
-Use esse passo a passo quando quiser criar VCN, subnet publica, security list e VM manualmente ou via OCI CLI.
-
-## Infra OCI Provisionamento via Terraform
-
-Um Terraform completo para criar uma infra, instala e configura o OpenClaw via cloud-init esta em:
-
-[infra/terraform/oci-trial-deploy/README.md](infra/terraform/oci-trial-deploy/README.md)
-
-Ele cria:
-
-- VCN;
-- Internet Gateway;
-- Route Table;
-- Security List;
-- Subnet publica;
-- VM Oracle Linux 9;
-- bootstrap com Node.js, OpenClaw, plugin Grok WebSearch, agente Odin e servico Gateway.
-
-As credenciais de LLM nao sao gravadas no Terraform state. O bootstrap cria arquivos de exemplo e deixa o servidor pronto para receber as chaves via SSH depois do `terraform apply`.
-
 ## Instalacao no servidor
-### Para VM já criada ou criada sem o Terraform
 
 Os comandos abaixo rodam dentro da VM como `opc`.
 
@@ -281,6 +255,72 @@ tar -czf "$HOME/openclaw-state-$(date +%Y%m%d-%H%M%S).tgz" \
   "$HOME/.openclaw/agents" \
   "$HOME/.openclaw/extensions"
 ```
+
+## Infra OCI opcional
+
+A criacao manual da infraestrutura OCI foi movida para:
+
+[infra/oci-infra.md](infra/oci-infra.md)
+
+Use esse arquivo quando quiser criar VCN, subnet publica, security list e VM manualmente ou via OCI CLI. O README principal assume que a VM ja existe.
+
+## Terraform para trial/ambiente novo
+
+Um Terraform completo para criar uma infra nova de trial e executar o maximo possivel do bootstrap via cloud-init esta em:
+
+[infra/terraform/oci-trial-deploy/README.md](infra/terraform/oci-trial-deploy/README.md)
+
+Ele cria:
+
+- VCN;
+- Internet Gateway;
+- Route Table;
+- Security List;
+- Subnet publica;
+- VM Oracle Linux 9;
+- bootstrap com Node.js, OpenClaw, plugin Grok WebSearch, agente Odin e servico Gateway.
+
+As credenciais de LLM nao sao gravadas no Terraform state. O bootstrap cria arquivos de exemplo e deixa o servidor pronto para receber as chaves via SSH depois do `terraform apply`.
+
+Depois que a VM estiver criada e o acesso SSH estiver funcionando, continue pelo guia de pos-deploy:
+
+[infra/terraform/oci-trial-deploy/POST_DEPLOY.md](infra/terraform/oci-trial-deploy/POST_DEPLOY.md)
+
+Esse guia cobre os passos que ainda precisam ser feitos dentro do servidor:
+
+- confirmar que o `cloud-init` terminou;
+- validar a instalacao do OpenClaw;
+- preencher `~/.openclaw/gateway.systemd.env` com as chaves;
+- reiniciar e validar o Gateway;
+- testar o modelo principal, o agente `odin` e a tool `web_search`;
+- abrir tunel SSH para acessar `ws://127.0.0.1:18789` a partir da maquina local.
+
+## Pos-deploy apos acesso SSH
+
+O Terraform entrega a infraestrutura e instala o OpenClaw, mas as credenciais de LLM devem ser configuradas depois do primeiro SSH. O checklist oficial esta em:
+
+[infra/terraform/oci-trial-deploy/POST_DEPLOY.md](infra/terraform/oci-trial-deploy/POST_DEPLOY.md)
+
+Resumo do fluxo:
+
+```bash
+ssh <alias-da-vm>
+sudo cloud-init status --long
+sudo tail -n 120 /var/log/cloud-init-output.log
+
+source "$HOME/.bashrc"
+openclaw --version
+openclaw config validate
+openclaw gateway status
+
+nano "$HOME/.openclaw/gateway.systemd.env"
+chmod 600 "$HOME/.openclaw/gateway.systemd.env"
+openclaw gateway restart
+
+openclaw agent --agent odin --message "Use web_search para trazer uma fonte atual." --json
+```
+
+O Terraform pode receber variaveis nao secretas antes do `apply`, como regiao, porta, modelo, `oci_responses_project_ocid` e `openai_base_url`. Ja chaves como `OCI_RESPONSES_API_KEY`, `OPENAI_API_KEY` e tokens de provedores devem ficar fora do Terraform para nao entrarem em state, metadados da instancia ou historico do Resource Manager.
 
 ## Agente Odin
 
