@@ -14,7 +14,9 @@ boot_volume_size_gbs   = 80
 
 gateway_port        = 18789
 openclaw_npm_version = "latest"
-oci_responses_region = "us-chicago-1"
+oci_responses_region       = "us-chicago-1"
+oci_responses_project_ocid = ""
+openai_base_url            = ""
 
 grok_model_id   = "xai.grok-4-1-fast-reasoning"
 gptoss_model_id = "custom-inference-generativeai-us-chicago-1-oci-oraclecloud-com/openai.gpt-oss-120b"

@@ -1,6 +1,7 @@
 locals {
-  ssh_public_key = trimspace(var.ssh_public_key)
-  image_id       = var.image_ocid != "" ? var.image_ocid : data.oci_core_images.oracle_linux.images[0].id
+  ssh_public_key   = trimspace(var.ssh_public_key)
+  image_id         = var.image_ocid != "" ? var.image_ocid : data.oci_core_images.oracle_linux.images[0].id
+  ssh_config_alias = replace(lower(var.prefix), "/[^0-9a-z._-]/", "-")
 }
 
 data "oci_identity_availability_domains" "ads" {
@@ -124,6 +125,8 @@ resource "oci_core_instance" "openclaw" {
       gateway_port        = var.gateway_port
       openclaw_version    = var.openclaw_npm_version
       oci_region          = var.oci_responses_region
+      oci_project_ocid    = var.oci_responses_project_ocid
+      openai_base_url     = var.openai_base_url
       grok_model_id       = var.grok_model_id
       gptoss_model_id     = var.gptoss_model_id
       install_nginx       = var.install_nginx ? "true" : "false"

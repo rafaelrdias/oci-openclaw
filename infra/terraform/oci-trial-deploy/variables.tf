@@ -103,6 +103,18 @@ variable "oci_responses_region" {
   default     = "us-chicago-1"
 }
 
+variable "oci_responses_project_ocid" {
+  description = "Optional OCI Generative AI project OCID exported in the gateway environment. This is not a secret."
+  type        = string
+  default     = ""
+}
+
+variable "openai_base_url" {
+  description = "Optional OpenAI-compatible base URL exported in the gateway environment. Leave empty to keep a commented example based on oci_responses_region."
+  type        = string
+  default     = ""
+}
+
 variable "grok_model_id" {
   description = "Grok model ID exposed by the custom plugin."
   type        = string

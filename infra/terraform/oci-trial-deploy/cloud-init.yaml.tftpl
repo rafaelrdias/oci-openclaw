@@ -92,12 +92,20 @@ write_files:
 
       cat > /home/opc/.openclaw/gateway.systemd.env <<'ENV'
       OCI_RESPONSES_REGION=${oci_region}
+      %{ if oci_project_ocid != "" ~}
+      OCI_RESPONSES_PROJECT_OCID=${oci_project_ocid}
+      %{ else ~}
+      # OCI_RESPONSES_PROJECT_OCID=<optional-project-ocid>
+      %{ endif ~}
+      %{ if openai_base_url != "" ~}
+      OPENAI_BASE_URL=${openai_base_url}
+      %{ else ~}
+      # OPENAI_BASE_URL=https://inference.generativeai.${oci_region}.oci.oraclecloud.com/20231130/actions/v1
+      %{ endif ~}
 
       # Add secrets after provisioning. Do not commit this file.
       # OCI_RESPONSES_API_KEY=<your-oci-responses-api-key>
       # OPENAI_API_KEY=<optional-openai-compatible-key>
-      # OPENAI_BASE_URL=https://inference.generativeai.${oci_region}.oci.oraclecloud.com/20231130/actions/v1
-      # OCI_RESPONSES_PROJECT_OCID=<optional-project-ocid>
       ENV
       chown opc:opc /home/opc/.openclaw/gateway.systemd.env
       chmod 600 /home/opc/.openclaw/gateway.systemd.env

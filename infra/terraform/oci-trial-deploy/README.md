@@ -18,6 +18,8 @@ O deploy cria:
 
 Por seguranca, as chaves de LLM nao sao passadas como variaveis Terraform. Isso evita grava-las no Terraform state. Depois do apply, conecte por SSH e preencha `~/.openclaw/gateway.systemd.env`.
 
+Depois que o SSH estiver funcionando, siga o guia [POST_DEPLOY.md](./POST_DEPLOY.md) para configurar credenciais, reiniciar o gateway, testar o agente `odin` e abrir tunel local para o gateway.
+
 ## Caminho recomendado: OCI Console Resource Manager
 
 Sim: para um ambiente de trial ou uma criacao assistida pela Console OCI, o melhor caminho e criar um `.zip` deste modulo e executar pelo **Resource Manager**.
@@ -103,12 +105,13 @@ Esse ZIP contem os `.tf`, o `cloud-init.yaml.tftpl` e os assets necessarios para
    - `prefix`;
    - `ssh_public_key` com o conteudo completo do arquivo `.pub`;
    - `ssh_allowed_cidr`, preferencialmente seu IP publico com `/32`;
+   - `oci_responses_region`, `oci_responses_project_ocid` e `openai_base_url`, se quiser deixar valores nao secretos prontos no servidor;
    - shape, OCPUs e memoria conforme sua quota de trial.
 11. Clique em **Create**.
 12. Abra a stack criada e clique em **Plan**.
 13. Revise o plano.
 14. Clique em **Apply**.
-15. Ao final do job, abra **Outputs** e copie `public_ip` ou `ssh_command`.
+15. Ao final do job, abra **Outputs** e copie `public_ip`, `ssh_command` ou `ssh_config_entry`.
 
 Se `ssh_public_key` ficar vazio ou em formato invalido, o `plan`/`apply` falhara antes de criar a VM. Isso e intencional para evitar uma instancia sem acesso SSH conhecido.
 
@@ -118,6 +121,30 @@ Depois do apply:
 ssh -i "$HOME/.ssh/openclaw_trial" opc@<public_ip>
 sudo tail -f /var/log/cloud-init-output.log
 ```
+
+### Opcional: criar um alias SSH local
+
+Para uso recorrente, principalmente com VS Code Remote SSH, prefira criar um alias limpo no `~/.ssh/config` em vez de reaproveitar um host antigo de outra VM. O Terraform tambem imprime o output `ssh_config_entry` com um bloco pronto.
+
+Exemplo:
+
+```sshconfig
+Host openclaw-trial
+  HostName <public_ip>
+  User opc
+  IdentityFile ~/.ssh/openclaw_trial
+  IdentitiesOnly yes
+  StrictHostKeyChecking accept-new
+  UpdateHostKeys no
+```
+
+Depois teste:
+
+```bash
+ssh openclaw-trial
+```
+
+No VS Code, conecte pelo alias configurado, por exemplo `openclaw-trial`. Se uma VM for destruida e recriada com outro IP, atualize o `HostName` ou crie um novo alias para evitar cache antigo do Remote SSH.
 
 Quando o cloud-init terminar, configure as credenciais:
 
@@ -150,6 +177,8 @@ openclaw agents list --json
 openclaw agent --agent odin --message "Use web_search para responder com uma fonte atual." --json
 ```
 
+Para o checklist completo de pos-deploy, incluindo logs, tunel SSH e troubleshooting, consulte [POST_DEPLOY.md](./POST_DEPLOY.md).
+
 ## Uso alternativo: Terraform CLI
 
 ```bash
@@ -168,6 +197,7 @@ Depois do apply:
 
 ```bash
 terraform output ssh_command
+terraform output ssh_config_entry
 ssh -i "$HOME/.ssh/openclaw_trial" opc@$(terraform output -raw public_ip)
 ```
 
@@ -194,6 +224,7 @@ openclaw gateway restart
 | `main.tf` | Recursos OCI e `user_data` da VM |
 | `outputs.tf` | IP, comando SSH e proximos passos |
 | `cloud-init.yaml.tftpl` | Bootstrap do servidor |
+| `POST_DEPLOY.md` | Passos depois do primeiro acesso SSH |
 | `assets/` | Plugin, patch e arquivos do agente usados no cloud-init |
 | `build-resource-manager-zip.sh` | Gera ZIP para upload no OCI Resource Manager |
 | `terraform.tfvars.example` | Exemplo de variaveis sem segredos |
@@ -211,6 +242,7 @@ terraform destroy
 - As credenciais de LLM devem ser inseridas depois do provisionamento, por SSH.
 - Se a shape de trial nao estiver disponivel na regiao, ajuste `instance_shape`, `instance_ocpus` e `instance_memory_in_gbs`.
 - O cloud-init usa `gz+b64` nos assets do plugin/agente para manter o `metadata.user_data` abaixo do limite de 32 KB da OCI.
+- Para VS Code Remote SSH, use um alias SSH unico por VM. Se aparecer `EmptyOutput` ou `BadInstallScriptResult`, teste primeiro `ssh <alias>` no terminal e crie um novo alias ou limpe o cache do Remote SSH antes de suspeitar da infra.
 
 ## Referencias
 
