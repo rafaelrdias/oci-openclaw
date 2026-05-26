@@ -14,7 +14,6 @@ ssh -i "$HOME/.ssh/openclaw_trial" opc@<public_ip>
 
 ```bash
 sudo cloud-init status --long
-sudo tail -n 120 /var/log/cloud-init-output.log
 ```
 
 O `cloud-init status` deve terminar como `status: done`. Se ainda estiver em execucao, acompanhe:
