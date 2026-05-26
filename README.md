@@ -321,6 +321,8 @@ openclaw gateway restart
 openclaw agent --agent odin --message "Use web_search para trazer uma fonte atual." --json
 ```
 
+Para a Control UI, se aparecer `Auth required`, configure um `OPENCLAW_GATEWAY_TOKEN` no `~/.openclaw/gateway.systemd.env` e use esse valor no campo `Gateway Token` ou no fragmento `#token=...` da URL. Em SSH/headless, `openclaw config get gateway.auth.token` pode retornar `__OPENCLAW_REDACTED__`, e isso e esperado.
+
 O Terraform pode receber variaveis nao secretas antes do `apply`, como regiao, porta, modelo, `oci_responses_project_ocid` e `openai_base_url`. Ja chaves como `OCI_RESPONSES_API_KEY`, `OPENAI_API_KEY` e tokens de provedores devem ficar fora do Terraform para nao entrarem em state, metadados da instancia ou historico do Resource Manager.
 
 ## Agente Odin

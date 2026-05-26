@@ -107,15 +107,34 @@ A Control UI abre em:
 http://127.0.0.1:18789/
 ```
 
-Se a tela mostrar `Auth required`, o Gateway esta acessivel, mas precisa do token ou senha configurada. No servidor, gere ou confirme o token:
+Se a tela mostrar `Auth required`, o Gateway esta acessivel, mas precisa do token ou senha configurada.
+
+Em servidores acessados por SSH, `openclaw dashboard --no-open` pode nao conseguir copiar a URL tokenizada para a area de transferencia, e `openclaw config get gateway.auth.token` pode retornar `__OPENCLAW_REDACTED__`. Isso e esperado: o CLI mascara campos secretos.
+
+Use um token em variavel de ambiente do servico, referenciado pela configuracao do OpenClaw:
 
 ```bash
-openclaw doctor --generate-gateway-token --yes
+TOKEN="$(openssl rand -hex 32)"
+ENV_FILE="$HOME/.openclaw/gateway.systemd.env"
+
+grep -v '^OPENCLAW_GATEWAY_TOKEN=' "$ENV_FILE" > "$ENV_FILE.tmp"
+printf 'OPENCLAW_GATEWAY_TOKEN=%s\n' "$TOKEN" >> "$ENV_FILE.tmp"
+mv "$ENV_FILE.tmp" "$ENV_FILE"
+chmod 600 "$ENV_FILE"
+
+openclaw config set gateway.auth.mode token
+openclaw config set gateway.auth.token \
+  --ref-provider default \
+  --ref-source env \
+  --ref-id OPENCLAW_GATEWAY_TOKEN
 openclaw gateway restart
-openclaw config get gateway.auth.token
+
+printf '\nControl UI: http://127.0.0.1:18789/#token=%s\n' "$TOKEN"
 ```
 
-Copie o valor retornado pelo ultimo comando e cole no campo `Gateway Token` da UI. Alternativamente, abra a URL com o token no fragmento:
+Abra a URL impressa no final ou copie somente o valor de `TOKEN` para o campo `Gateway Token` da UI.
+
+O formato da URL tokenizada e:
 
 ```text
 http://127.0.0.1:18789/#token=<gateway-token>
@@ -127,7 +146,7 @@ Tambem e possivel usar o helper:
 openclaw dashboard --no-open
 ```
 
-Em alguns ambientes remotos, o helper nao consegue copiar a URL tokenizada para a area de transferencia. Nesse caso, use `openclaw config get gateway.auth.token` e cole o token manualmente na UI.
+Em ambientes com desktop/clipboard local, o helper pode copiar a URL tokenizada automaticamente. Em SSH/headless, prefira o fluxo com `OPENCLAW_GATEWAY_TOKEN` acima.
 
 ## O que pode ser variavel Terraform
 
@@ -153,6 +172,6 @@ Mesmo usando variaveis `sensitive`, esses valores podem ficar no Terraform state
 
 - `openclaw: command not found`: rode `source "$HOME/.bashrc"` ou abra uma nova sessao SSH.
 - Gateway sem chave: confira `~/.openclaw/gateway.systemd.env` e reinicie com `openclaw gateway restart`.
-- UI com `Auth required`: gere ou recupere o token com `openclaw doctor --generate-gateway-token --yes` e `openclaw config get gateway.auth.token`.
+- UI com `Auth required`: em SSH/headless, configure `OPENCLAW_GATEWAY_TOKEN` no `gateway.systemd.env`, aponte `gateway.auth.token` para essa env var e reinicie o gateway.
 - `BadInstallScriptResult` no VS Code Remote SSH: teste `ssh <alias>` no terminal; se funcionar, crie um alias novo para a VM ou limpe o cache do Remote SSH.
 - Web search sem resposta: confira `OCI_RESPONSES_API_KEY`, regiao e logs do gateway.
