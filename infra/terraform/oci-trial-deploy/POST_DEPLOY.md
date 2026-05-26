@@ -14,6 +14,7 @@ ssh -i "$HOME/.ssh/openclaw_trial" opc@<public_ip>
 
 ```bash
 sudo cloud-init status --long
+sudo tail -n 120 /var/log/cloud-init-output.log
 ```
 
 O `cloud-init status` deve terminar como `status: done`. Se ainda estiver em execucao, acompanhe:
@@ -98,6 +99,36 @@ Depois use:
 ws://127.0.0.1:18789
 ```
 
+## 8. Acesse a Control UI
+
+A Control UI abre em:
+
+```text
+http://127.0.0.1:18789/
+```
+
+Se a tela mostrar `Auth required`, o Gateway esta acessivel, mas precisa do token ou senha configurada. No servidor, gere ou confirme o token:
+
+```bash
+openclaw doctor --generate-gateway-token --yes
+openclaw gateway restart
+openclaw config get gateway.auth.token
+```
+
+Copie o valor retornado pelo ultimo comando e cole no campo `Gateway Token` da UI. Alternativamente, abra a URL com o token no fragmento:
+
+```text
+http://127.0.0.1:18789/#token=<gateway-token>
+```
+
+Tambem e possivel usar o helper:
+
+```bash
+openclaw dashboard --no-open
+```
+
+Em alguns ambientes remotos, o helper nao consegue copiar a URL tokenizada para a area de transferencia. Nesse caso, use `openclaw config get gateway.auth.token` e cole o token manualmente na UI.
+
 ## O que pode ser variavel Terraform
 
 Pode entrar como variavel antes do `apply`, porque nao e segredo:
@@ -122,5 +153,6 @@ Mesmo usando variaveis `sensitive`, esses valores podem ficar no Terraform state
 
 - `openclaw: command not found`: rode `source "$HOME/.bashrc"` ou abra uma nova sessao SSH.
 - Gateway sem chave: confira `~/.openclaw/gateway.systemd.env` e reinicie com `openclaw gateway restart`.
+- UI com `Auth required`: gere ou recupere o token com `openclaw doctor --generate-gateway-token --yes` e `openclaw config get gateway.auth.token`.
 - `BadInstallScriptResult` no VS Code Remote SSH: teste `ssh <alias>` no terminal; se funcionar, crie um alias novo para a VM ou limpe o cache do Remote SSH.
 - Web search sem resposta: confira `OCI_RESPONSES_API_KEY`, regiao e logs do gateway.

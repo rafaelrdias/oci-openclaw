@@ -293,6 +293,7 @@ Esse guia cobre os passos que ainda precisam ser feitos dentro do servidor:
 - preencher `~/.openclaw/gateway.systemd.env` com as chaves;
 - reiniciar e validar o Gateway;
 - testar o modelo principal, o agente `odin` e a tool `web_search`;
+- autenticar na Control UI com o token do Gateway;
 - abrir tunel SSH para acessar `ws://127.0.0.1:18789` a partir da maquina local.
 
 ## Pos-deploy apos acesso SSH
