@@ -148,9 +148,9 @@ openclaw dashboard --no-open
 
 Em ambientes com desktop/clipboard local, o helper pode copiar a URL tokenizada automaticamente. Em SSH/headless, prefira o fluxo com `OPENCLAW_GATEWAY_TOKEN` acima.
 
-## 9. Mantenha o acesso depois do Mac hibernar
+## 9. Mantenha o acesso depois do Computador hibernar
 
-O OpenClaw continua rodando no servidor mesmo que seu Mac hiberne, porque o Gateway foi instalado como servico `systemd --user` e o bootstrap habilita `linger` para o usuario `opc`.
+O OpenClaw continua rodando no servidor mesmo que seu computador hiberne, porque o Gateway foi instalado como servico `systemd --user` e o bootstrap habilita `linger` para o usuario `opc`.
 
 Valide no servidor:
 
@@ -160,7 +160,7 @@ systemctl --user is-enabled openclaw-gateway.service
 systemctl --user is-active openclaw-gateway.service
 ```
 
-O que nao sobrevive a hibernacao e o tunel SSH aberto no seu Mac. Quando o Mac dorme, a rede local para e a sessao TCP cai. Ao acordar, crie o tunel novamente:
+O que nao sobrevive a hibernacao e o tunel SSH aberto no seu Computador. Quando o Computador dorme, a rede local para e a sessao TCP cai. Ao acordar, crie o tunel novamente:
 
 ```bash
 ssh -N \
@@ -171,7 +171,7 @@ ssh -N \
   <alias-ssh>
 ```
 
-Para recriar o tunel automaticamente no macOS, crie um LaunchAgent local. Ajuste `oc_lab` para o alias SSH que voce configurou:
+Por exemplo, para recriar o tunel automaticamente no macOS, crie um LaunchAgent local. Ajuste `oc_lab` para o alias SSH que voce configurou:
 
 ```bash
 mkdir -p "$HOME/Library/LaunchAgents"
