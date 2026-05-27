@@ -126,6 +126,14 @@ write_files:
         openclaw setup --non-interactive || true
         openclaw plugins install "$HOME/openclaw-plugins/oci-responses-grok-web" --force || true
         openclaw plugins enable oci-responses-grok-web || true
+        openclaw plugins enable ${web_search_provider} || true
+        openclaw config set tools.web.search.enabled true --strict-json || true
+        openclaw config set tools.web.search.provider ${web_search_provider} || true
+        openclaw config set tools.web.search.maxResults ${web_search_max_results} --strict-json || true
+        %{ if web_search_provider == "duckduckgo" ~}
+        openclaw config set plugins.entries.duckduckgo.config.webSearch.region ${duckduckgo_region} || true
+        openclaw config set plugins.entries.duckduckgo.config.webSearch.safeSearch ${duckduckgo_safe_search} || true
+        %{ endif ~}
         openclaw models aliases add oci-grok41r-web oci-responses-grok-web/${grok_model_id} || true
         openclaw models aliases add oci-gptoss ${gptoss_model_id} || true
         openclaw models set oci-grok41r-web || true
@@ -150,6 +158,7 @@ write_files:
         openclaw gateway status || true
         openclaw agents list --json || true
         openclaw models list --status-plain || true
+        openclaw infer web providers --json || true
       '
 
 runcmd:

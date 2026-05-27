@@ -47,7 +47,8 @@ Ambiente:
 
 | Plugin | Uso |
 | --- | --- |
-| `oci-responses-grok-web` | Provider OCI Responses para Grok 4.1 Fast Reasoning com tools e provider `web_search` `oci-grok-web` |
+| `oci-responses-grok-web` | Provider OCI Responses para Grok 4.1 Fast Reasoning com suporte a tools gerenciadas pelo OpenClaw |
+| `duckduckgo` | Provider bundled selecionado para a tool `web_search` |
 | `whatsapp` | Canal WhatsApp |
 | `diagnostics-otel` | Diagnosticos OpenTelemetry |
 

@@ -13,6 +13,7 @@ O deploy cria:
 - Node.js 22;
 - OpenClaw;
 - plugin `oci-responses-grok-web`;
+- provider bundled `duckduckgo` para a tool `web_search`;
 - agente `odin`;
 - OpenClaw Gateway como servico `systemd --user` na porta `18789`.
 
@@ -86,7 +87,7 @@ O script gera:
 infra/terraform/oci-trial-deploy/dist/oci-trial-resource-manager.zip
 ```
 
-Esse ZIP contem os `.tf`, o `cloud-init.yaml.tftpl` e os assets necessarios para instalar o plugin `oci-responses-grok-web` e o agente `odin`.
+Esse ZIP contem os `.tf`, o `cloud-init.yaml.tftpl` e os assets necessarios para instalar o plugin `oci-responses-grok-web`, habilitar `duckduckgo` para `web_search` e criar o agente `odin`.
 
 ## Executar pela OCI Console
 
@@ -106,6 +107,7 @@ Esse ZIP contem os `.tf`, o `cloud-init.yaml.tftpl` e os assets necessarios para
    - `ssh_public_key` com o conteudo completo do arquivo `.pub`;
    - `ssh_allowed_cidr`, preferencialmente seu IP publico com `/32`;
    - `oci_responses_region`, `oci_responses_project_ocid` e `openai_base_url`, se quiser deixar valores nao secretos prontos no servidor;
+   - `web_search_provider`, `web_search_max_results`, `duckduckgo_region` e `duckduckgo_safe_search`, se quiser mudar o provider de busca antes do apply;
    - shape, OCPUs e memoria conforme sua quota de trial.
 11. Clique em **Create**.
 12. Abra a stack criada e clique em **Plan**.
@@ -173,6 +175,7 @@ openclaw --version
 openclaw config validate
 openclaw gateway status
 openclaw models list --status-plain
+openclaw infer web providers --json
 openclaw agents list --json
 openclaw agent --agent odin --message "Use web_search para responder com uma fonte atual." --json
 ```
@@ -240,6 +243,7 @@ terraform destroy
 - A porta do OpenClaw Gateway fica em loopback (`127.0.0.1:18789`) e nao e aberta na Security List.
 - A Security List abre SSH, HTTP e HTTPS. Restrinja `ssh_allowed_cidr` ao seu IP sempre que possivel.
 - As credenciais de LLM devem ser inseridas depois do provisionamento, por SSH.
+- A busca web padrao usa `duckduckgo`; ela nao precisa de API key e evita depender do web search nativo do Grok via OCI.
 - Se a shape de trial nao estiver disponivel na regiao, ajuste `instance_shape`, `instance_ocpus` e `instance_memory_in_gbs`.
 - O cloud-init usa `gz+b64` nos assets do plugin/agente para manter o `metadata.user_data` abaixo do limite de 32 KB da OCI.
 - Para VS Code Remote SSH, use um alias SSH unico por VM. Se aparecer `EmptyOutput` ou `BadInstallScriptResult`, teste primeiro `ssh <alias>` no terminal e crie um novo alias ou limpe o cache do Remote SSH antes de suspeitar da infra.

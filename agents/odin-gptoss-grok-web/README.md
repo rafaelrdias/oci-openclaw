@@ -1,10 +1,10 @@
-# Agente Odin com Grok 4.1 Fast Reasoning e WebSearch
+# Agente Odin com Grok 4.1 Fast Reasoning e DuckDuckGo WebSearch
 
 Este guia cria um agente inspirado no Odin para um deploy OpenClaw generico:
 
 - LLM principal: `oci-grok41r-web`, alias para `oci-responses-grok-web/xai.grok-4-1-fast-reasoning`.
 - Raciocinio: habilitado no cadastro do modelo do plugin.
-- Tools: habilitadas via OCI Responses, incluindo `web_search`.
+- Tools: gerenciadas pelo OpenClaw, incluindo `web_search` via provider bundled `duckduckgo`.
 - Fallback/opcional: `oci-gptoss`, alias para `openai.gpt-oss-120b` via OCI Generative AI.
 - Sem STT e sem TTS nesta versao.
 
@@ -59,7 +59,7 @@ openclaw models set oci-grok41r-web
 
 Se o seu tenancy retornar outros IDs, substitua os IDs acima pelos valores exatos retornados no `models list`.
 
-## 3. Instalar o plugin Grok WebSearch
+## 3. Instalar o plugin Grok e habilitar DuckDuckGo
 
 Copie a pasta do plugin deste repositorio para o servidor:
 
@@ -76,14 +76,21 @@ Instale o plugin no OpenClaw:
 ```bash
 openclaw plugins install "$HOME/openclaw-plugins/oci-responses-grok-web" --force
 openclaw plugins enable oci-responses-grok-web
+openclaw plugins enable duckduckgo
+openclaw config set tools.web.search.enabled true --strict-json
+openclaw config set tools.web.search.provider duckduckgo
+openclaw config set tools.web.search.maxResults 5 --strict-json
+openclaw config set plugins.entries.duckduckgo.config.webSearch.region br-pt
+openclaw config set plugins.entries.duckduckgo.config.webSearch.safeSearch moderate
 openclaw config validate
 openclaw gateway restart
 ```
 
-Verifique se o provider de WebSearch foi carregado:
+Verifique se o provider de modelo Grok e o provider `web_search` foram carregados:
 
 ```bash
 openclaw plugins list --json | grep -A 8 '"id": "oci-responses-grok-web"'
+openclaw infer web providers --json
 openclaw models list --status-plain
 ```
 
@@ -129,7 +136,7 @@ openclaw agents set-identity \
   --json
 ```
 
-Depois aplique a configuracao de ferramentas. O perfil abaixo libera `web_search`, mantem execucao minima e desliga verbose por padrao para evitar respostas intermediarias em excesso.
+Depois aplique a configuracao de ferramentas. O perfil abaixo libera `web_search`, seleciona `duckduckgo` como provider, mantem execucao minima e desliga verbose por padrao para evitar respostas intermediarias em excesso.
 
 ```bash
 openclaw config patch --stdin < agents/odin-gptoss-grok-web/config/agent-config.patch.json5
@@ -159,7 +166,7 @@ openclaw agent \
   --json
 ```
 
-Teste uma chamada forçando o modelo Grok web como modelo da rodada, apenas para isolar o plugin:
+Teste uma chamada forçando o modelo Grok como modelo da rodada, apenas para isolar o plugin:
 
 ```bash
 openclaw agent \
@@ -207,7 +214,8 @@ journalctl --user -u openclaw-gateway.service -f
 
 - Esta versao nao configura STT nem TTS.
 - O plugin usa `OCI_RESPONSES_API_KEY` e `OCI_RESPONSES_REGION`; mantenha essas variaveis no `gateway.systemd.env`.
-- O provider de WebSearch registrado pelo plugin se chama `oci-grok-web`.
+- O provider de WebSearch padrao e `duckduckgo`, que vem bundled no OpenClaw e nao exige API key propria.
+- O web search nativo do Grok via OCI nao e usado neste deploy.
 - O modelo exposto pelo plugin se chama `oci-responses-grok-web/xai.grok-4-1-fast-reasoning`.
 - O alias `oci-grok41r-web` e o modelo principal do agente neste deploy.
-- Se o OpenClaw nao encontrar o provider, rode `openclaw plugins install ... --force`, reinicie o gateway e valide com `openclaw plugins list`.
+- Se o OpenClaw nao encontrar o provider de modelo, rode `openclaw plugins install ... --force`, reinicie o gateway e valide com `openclaw plugins list`.

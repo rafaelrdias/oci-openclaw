@@ -35,7 +35,7 @@ openclaw agents list --json
 openclaw gateway status
 ```
 
-O modelo principal esperado e o alias `oci-grok41r-web`, apontando para `oci-responses-grok-web/xai.grok-4-1-fast-reasoning`. O agente esperado e `odin`.
+O modelo principal esperado e o alias `oci-grok41r-web`, apontando para `oci-responses-grok-web/xai.grok-4-1-fast-reasoning`. O agente esperado e `odin`. O provider esperado para `web_search` e `duckduckgo`.
 
 ## 4. Configure as credenciais
 
@@ -81,6 +81,7 @@ journalctl --user -u openclaw-gateway.service -f
 
 ```bash
 openclaw models list --status-plain
+openclaw infer web providers --json
 openclaw agent --agent odin --message "Responda em uma frase se o gateway esta ativo." --json
 openclaw agent --agent odin --message "Use web_search para trazer uma fonte atual sobre OCI Generative AI." --json
 ```
@@ -148,9 +149,9 @@ openclaw dashboard --no-open
 
 Em ambientes com desktop/clipboard local, o helper pode copiar a URL tokenizada automaticamente. Em SSH/headless, prefira o fluxo com `OPENCLAW_GATEWAY_TOKEN` acima.
 
-## 9. Mantenha o acesso depois do Computador hibernar
+## 9. Mantenha o acesso depois do Mac hibernar
 
-O OpenClaw continua rodando no servidor mesmo que seu computador hiberne, porque o Gateway foi instalado como servico `systemd --user` e o bootstrap habilita `linger` para o usuario `opc`.
+O OpenClaw continua rodando no servidor mesmo que seu Mac hiberne, porque o Gateway foi instalado como servico `systemd --user` e o bootstrap habilita `linger` para o usuario `opc`.
 
 Valide no servidor:
 
@@ -160,7 +161,7 @@ systemctl --user is-enabled openclaw-gateway.service
 systemctl --user is-active openclaw-gateway.service
 ```
 
-O que nao sobrevive a hibernacao e o tunel SSH aberto no seu Computador. Quando o Computador dorme, a rede local para e a sessao TCP cai. Ao acordar, crie o tunel novamente:
+O que nao sobrevive a hibernacao e o tunel SSH aberto no seu Mac. Quando o Mac dorme, a rede local para e a sessao TCP cai. Ao acordar, crie o tunel novamente:
 
 ```bash
 ssh -N \
@@ -171,7 +172,7 @@ ssh -N \
   <alias-ssh>
 ```
 
-Por exemplo, para recriar o tunel automaticamente no macOS, crie um LaunchAgent local. Ajuste `oc_lab` para o alias SSH que voce configurou:
+Para recriar o tunel automaticamente no macOS, crie um LaunchAgent local. Ajuste `oc_lab` para o alias SSH que voce configurou:
 
 ```bash
 mkdir -p "$HOME/Library/LaunchAgents"
@@ -251,6 +252,10 @@ Pode entrar como variavel antes do `apply`, porque nao e segredo:
 - `gptoss_model_id`;
 - `gateway_port`;
 - `openclaw_npm_version`.
+- `web_search_provider`;
+- `web_search_max_results`;
+- `duckduckgo_region`;
+- `duckduckgo_safe_search`.
 
 Nao e recomendado passar como variavel Terraform:
 
@@ -267,4 +272,4 @@ Mesmo usando variaveis `sensitive`, esses valores podem ficar no Terraform state
 - UI com `Auth required`: em SSH/headless, configure `OPENCLAW_GATEWAY_TOKEN` no `gateway.systemd.env`, aponte `gateway.auth.token` para essa env var e reinicie o gateway.
 - UI com `Could not connect`: confirme se o tunel local existe com `lsof -nP -iTCP:18789 -sTCP:LISTEN` no Mac; se nao existir, abra o tunel SSH ou instale o LaunchAgent acima.
 - `BadInstallScriptResult` no VS Code Remote SSH: teste `ssh <alias>` no terminal; se funcionar, crie um alias novo para a VM ou limpe o cache do Remote SSH.
-- Web search sem resposta: confira `OCI_RESPONSES_API_KEY`, regiao e logs do gateway.
+- Web search sem resposta: confira `openclaw infer web providers --json`; o provider `duckduckgo` deve aparecer como `selected: true`. Depois valide logs do gateway.

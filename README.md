@@ -2,21 +2,20 @@
 
 Este repositorio documenta um deploy generico de OpenClaw em Oracle Cloud Infrastructure (OCI), com foco em uma VM Oracle Linux executando o OpenClaw Gateway como servico `systemd --user`.
 
-O perfil padrao deste deploy usa **Grok 4.1 Fast Reasoning com suporte a tools** como modelo principal, via plugin `oci-responses-grok-web`. O GPT-OSS via OCI Generative AI fica documentado como modelo alternativo/fallback.
+O perfil padrao deste deploy usa **Grok 4.1 Fast Reasoning com suporte a tools** como modelo principal, via plugin `oci-responses-grok-web`. A tool gerenciada `web_search` usa o provider bundled `duckduckgo` por padrao, porque o web search nativo do Grok via OCI pode nao estar liberado para todos os clientes. O GPT-OSS via OCI Generative AI fica documentado como modelo alternativo/fallback.
 
 ## Conteudo
 
 - [Exemplo de servidor](#exemplo-de-servidor)
 - [Modelo principal do deploy](#modelo-principal-do-deploy)
 - [Pre-requisitos](#pre-requisitos)
-- [Terraform para trial/ambiente novo](#terraform-para-trialambiente-novo)
 - [Instalacao no servidor](#instalacao-no-servidor)
 - [Credenciais e modelos](#credenciais-e-modelos)
 - [Gateway como servico](#gateway-como-servico)
 - [Canais](#canais)
 - [Operacao](#operacao)
-- [Infra OCI via CLI](#infra-oci-via-cli)
-
+- [Infra OCI opcional](#infra-oci-opcional)
+- [Terraform para trial/ambiente novo](#terraform-para-trialambiente-novo)
 - [Pos-deploy apos acesso SSH](#pos-deploy-apos-acesso-ssh)
 - [Agente Odin](#agente-odin)
 
@@ -39,7 +38,7 @@ Fluxo recomendado:
 ```text
 Usuario/canal -> OpenClaw Gateway -> Agente -> Grok 4.1 Fast Reasoning
                                       |
-                                      +-> tools, incluindo web_search
+                                      +-> tools, incluindo web_search via DuckDuckGo
 ```
 
 Mantenha o Gateway em loopback (`127.0.0.1`). Para acesso externo, use SSH tunnel, VPN, Nginx autenticado ou outra camada controlada.
@@ -56,9 +55,11 @@ Padrao deste repositorio:
 O plugin `oci-responses-grok-web` registra:
 
 - provider de modelo: `oci-responses-grok-web`;
-- provider de WebSearch: `oci-grok-web`;
 - modelo padrao: `xai.grok-4-1-fast-reasoning`;
-- suporte a `tools: [{ type: "web_search" }]` via OCI Responses.
+- raciocinio `medium` no cadastro do modelo;
+- suporte ao uso de tools gerenciadas pelo OpenClaw.
+
+O provider de WebSearch padrao e o plugin bundled `duckduckgo`, selecionado em `tools.web.search.provider`. Ele nao exige chave propria.
 
 ## Pre-requisitos
 
@@ -73,39 +74,6 @@ No servidor:
 
 - Saida HTTPS liberada para npm, GitHub, OCI Generative AI e provedores de canal.
 - Portas 22, 80 e 443 liberadas apenas se forem necessarias para SSH/Nginx/certificados.
-
-## Terraform para trial/ambiente novo
-
-Um Terraform completo para criar uma infra nova de trial e executar o maximo possivel do bootstrap via cloud-init esta em:
-
-[infra/terraform/oci-trial-deploy/README.md](infra/terraform/oci-trial-deploy/README.md)
-
-Ele cria:
-
-- VCN;
-- Internet Gateway;
-- Route Table;
-- Security List;
-- Subnet publica;
-- VM Oracle Linux 9;
-- bootstrap com Node.js, OpenClaw, plugin Grok WebSearch, agente Odin e servico Gateway.
-
-As credenciais de LLM nao sao gravadas no Terraform state. O bootstrap cria arquivos de exemplo e deixa o servidor pronto para receber as chaves via SSH depois do `terraform apply`.
-
-Depois que a VM estiver criada e o acesso SSH estiver funcionando, continue pelo guia de pos-deploy:
-
-[infra/terraform/oci-trial-deploy/POST_DEPLOY.md](infra/terraform/oci-trial-deploy/POST_DEPLOY.md)
-
-Esse guia cobre os passos que ainda precisam ser feitos dentro do servidor:
-
-- confirmar que o `cloud-init` terminou;
-- validar a instalacao do OpenClaw;
-- preencher `~/.openclaw/gateway.systemd.env` com as chaves;
-- reiniciar e validar o Gateway;
-- testar o modelo principal, o agente `odin` e a tool `web_search`;
-- autenticar na Control UI com o token do Gateway;
-- abrir tunel SSH para acessar `ws://127.0.0.1:18789` a partir da maquina local.
-- opcionalmente instalar um LaunchAgent no macOS para recriar o tunel SSH automaticamente depois que o micro acordar.
 
 ## Instalacao no servidor
 
@@ -173,7 +141,7 @@ EOF
 chmod 600 "$HOME/.openclaw/gateway.systemd.env"
 ```
 
-Instale o plugin Grok + WebSearch deste repositorio:
+Instale o plugin de modelo Grok deste repositorio e habilite o provider DuckDuckGo para `web_search`:
 
 ```bash
 cp -R agents/odin-gptoss-grok-web/plugins/oci-responses-grok-web \
@@ -181,6 +149,12 @@ cp -R agents/odin-gptoss-grok-web/plugins/oci-responses-grok-web \
 
 openclaw plugins install "$HOME/openclaw-plugins/oci-responses-grok-web" --force
 openclaw plugins enable oci-responses-grok-web
+openclaw plugins enable duckduckgo
+openclaw config set tools.web.search.enabled true --strict-json
+openclaw config set tools.web.search.provider duckduckgo
+openclaw config set tools.web.search.maxResults 5 --strict-json
+openclaw config set plugins.entries.duckduckgo.config.webSearch.region br-pt
+openclaw config set plugins.entries.duckduckgo.config.webSearch.safeSearch moderate
 openclaw config validate
 ```
 
@@ -290,13 +264,46 @@ tar -czf "$HOME/openclaw-state-$(date +%Y%m%d-%H%M%S).tgz" \
   "$HOME/.openclaw/extensions"
 ```
 
-## Infra OCI via CLI
+## Infra OCI opcional
 
-A criacao manual da infraestrutura OCI via CLI:
+A criacao manual da infraestrutura OCI foi movida para:
 
 [infra/oci-infra.md](infra/oci-infra.md)
 
 Use esse arquivo quando quiser criar VCN, subnet publica, security list e VM manualmente ou via OCI CLI. O README principal assume que a VM ja existe.
+
+## Terraform para trial/ambiente novo
+
+Um Terraform completo para criar uma infra nova de trial e executar o maximo possivel do bootstrap via cloud-init esta em:
+
+[infra/terraform/oci-trial-deploy/README.md](infra/terraform/oci-trial-deploy/README.md)
+
+Ele cria:
+
+- VCN;
+- Internet Gateway;
+- Route Table;
+- Security List;
+- Subnet publica;
+- VM Oracle Linux 9;
+- bootstrap com Node.js, OpenClaw, plugin Grok, DuckDuckGo para `web_search`, agente Odin e servico Gateway.
+
+As credenciais de LLM nao sao gravadas no Terraform state. O bootstrap cria arquivos de exemplo e deixa o servidor pronto para receber as chaves via SSH depois do `terraform apply`.
+
+Depois que a VM estiver criada e o acesso SSH estiver funcionando, continue pelo guia de pos-deploy:
+
+[infra/terraform/oci-trial-deploy/POST_DEPLOY.md](infra/terraform/oci-trial-deploy/POST_DEPLOY.md)
+
+Esse guia cobre os passos que ainda precisam ser feitos dentro do servidor:
+
+- confirmar que o `cloud-init` terminou;
+- validar a instalacao do OpenClaw;
+- preencher `~/.openclaw/gateway.systemd.env` com as chaves;
+- reiniciar e validar o Gateway;
+- testar o modelo principal, o agente `odin` e a tool `web_search` via DuckDuckGo;
+- autenticar na Control UI com o token do Gateway;
+- abrir tunel SSH para acessar `ws://127.0.0.1:18789` a partir da maquina local.
+- opcionalmente instalar um LaunchAgent no macOS para recriar o tunel SSH automaticamente depois que o micro acordar.
 
 ## Pos-deploy apos acesso SSH
 
@@ -325,9 +332,9 @@ openclaw agent --agent odin --message "Use web_search para trazer uma fonte atua
 
 Para a Control UI, se aparecer `Auth required`, configure um `OPENCLAW_GATEWAY_TOKEN` no `~/.openclaw/gateway.systemd.env` e use esse valor no campo `Gateway Token` ou no fragmento `#token=...` da URL. Em SSH/headless, `openclaw config get gateway.auth.token` pode retornar `__OPENCLAW_REDACTED__`, e isso e esperado.
 
-Se o computador hibernar, o Gateway no servidor continua ativo, mas o tunel SSH local cai. O guia [POST_DEPLOY.md](infra/terraform/oci-trial-deploy/POST_DEPLOY.md) inclui um exemplo LaunchAgent de macOS para recriar automaticamente o tunel `127.0.0.1:18789 -> servidor:18789` ao iniciar a sessao ou depois de uma queda.
+Se o Mac hibernar, o Gateway no servidor continua ativo, mas o tunel SSH local cai. O guia [POST_DEPLOY.md](infra/terraform/oci-trial-deploy/POST_DEPLOY.md) inclui um LaunchAgent de macOS para recriar automaticamente o tunel `127.0.0.1:18789 -> servidor:18789` ao iniciar a sessao ou depois de uma queda.
 
-O Terraform pode receber variaveis nao secretas antes do `apply`, como regiao, porta, modelo, `oci_responses_project_ocid` e `openai_base_url`. Ja chaves como `OCI_RESPONSES_API_KEY`, `OPENAI_API_KEY` e tokens de provedores devem ficar fora do Terraform para nao entrarem em state, metadados da instancia ou historico do Resource Manager.
+O Terraform pode receber variaveis nao secretas antes do `apply`, como regiao, porta, modelo, `oci_responses_project_ocid`, `openai_base_url`, `web_search_provider`, `web_search_max_results`, `duckduckgo_region` e `duckduckgo_safe_search`. Ja chaves como `OCI_RESPONSES_API_KEY`, `OPENAI_API_KEY` e tokens de provedores devem ficar fora do Terraform para nao entrarem em state, metadados da instancia ou historico do Resource Manager.
 
 ## Agente Odin
 
@@ -335,7 +342,7 @@ O passo a passo do agente inspirado no Odin esta em:
 
 [agents/odin-gptoss-grok-web/README.md](agents/odin-gptoss-grok-web/README.md)
 
-Nesta versao, o agente nasce com `oci-grok41r-web` como modelo principal e com `web_search` liberado. STT e TTS ficam fora do escopo.
+Nesta versao, o agente nasce com `oci-grok41r-web` como modelo principal e com `web_search` liberado via `duckduckgo`. STT e TTS ficam fora do escopo.
 
 ## Cuidados de seguranca
 

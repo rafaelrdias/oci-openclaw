@@ -17,4 +17,13 @@
       },
     },
   },
+  tools: {
+    web: {
+      search: {
+        enabled: true,
+        provider: "duckduckgo",
+        maxResults: 5,
+      },
+    },
+  },
 }

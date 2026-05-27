@@ -127,6 +127,35 @@ variable "gptoss_model_id" {
   default     = "custom-inference-generativeai-us-chicago-1-oci-oraclecloud-com/openai.gpt-oss-120b"
 }
 
+variable "web_search_provider" {
+  description = "OpenClaw managed web_search provider. DuckDuckGo is the default because it does not require OCI Grok native web_search availability."
+  type        = string
+  default     = "duckduckgo"
+}
+
+variable "web_search_max_results" {
+  description = "Default result count used by OpenClaw managed web_search."
+  type        = number
+  default     = 5
+}
+
+variable "duckduckgo_region" {
+  description = "DuckDuckGo region code used by the bundled OpenClaw DuckDuckGo provider."
+  type        = string
+  default     = "br-pt"
+}
+
+variable "duckduckgo_safe_search" {
+  description = "DuckDuckGo safe-search level: strict, moderate, or off."
+  type        = string
+  default     = "moderate"
+
+  validation {
+    condition     = contains(["strict", "moderate", "off"], var.duckduckgo_safe_search)
+    error_message = "duckduckgo_safe_search must be strict, moderate, or off."
+  }
+}
+
 variable "install_nginx" {
   description = "Install and start Nginx for future UI/proxy use."
   type        = bool

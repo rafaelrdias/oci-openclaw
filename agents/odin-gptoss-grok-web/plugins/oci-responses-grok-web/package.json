@@ -1,10 +1,11 @@
 {
   "name": "@rafaeldias/openclaw-oci-responses-grok-web",
-  "version": "0.1.5",
+  "version": "0.1.7",
   "type": "module",
   "private": true,
   "files": [
     "index.js",
+    "openclaw.plugin.json",
     "package.json"
   ],
   "openclaw": {

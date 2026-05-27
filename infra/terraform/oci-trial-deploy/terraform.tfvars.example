@@ -21,4 +21,9 @@ openai_base_url            = ""
 grok_model_id   = "xai.grok-4-1-fast-reasoning"
 gptoss_model_id = "custom-inference-generativeai-us-chicago-1-oci-oraclecloud-com/openai.gpt-oss-120b"
 
+web_search_provider    = "duckduckgo"
+web_search_max_results = 5
+duckduckgo_region      = "br-pt"
+duckduckgo_safe_search = "moderate"
+
 install_nginx = true
