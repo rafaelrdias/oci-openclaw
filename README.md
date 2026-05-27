@@ -14,7 +14,7 @@ O perfil padrao deste deploy usa **Grok 4.1 Fast Reasoning com suporte a tools**
 - [Gateway como servico](#gateway-como-servico)
 - [Canais](#canais)
 - [Operacao](#operacao)
-- [Infra OCI via CLI](#infra-oci-opcional)
+- [Infra OCI via CLI](#infra-oci-via-cli)
 - [Terraform para trial/ambiente novo](#terraform-para-trialambiente-novo)
 - [Pos-deploy apos acesso SSH](#pos-deploy-apos-acesso-ssh)
 - [Agente Odin](#agente-odin)
