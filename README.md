@@ -14,7 +14,7 @@ O perfil padrao deste deploy usa **Grok 4.1 Fast Reasoning com suporte a tools**
 - [Gateway como servico](#gateway-como-servico)
 - [Canais](#canais)
 - [Operacao](#operacao)
-- [Infra OCI opcional](#infra-oci-opcional)
+- [Infra OCI via CLI](#infra-oci-opcional)
 - [Terraform para trial/ambiente novo](#terraform-para-trialambiente-novo)
 - [Pos-deploy apos acesso SSH](#pos-deploy-apos-acesso-ssh)
 - [Agente Odin](#agente-odin)
@@ -256,9 +256,9 @@ tar -czf "$HOME/openclaw-state-$(date +%Y%m%d-%H%M%S).tgz" \
   "$HOME/.openclaw/extensions"
 ```
 
-## Infra OCI opcional
+## Infra OCI via CLI
 
-A criacao manual da infraestrutura OCI foi movida para:
+A criacao manual da infraestrutura OCI via CLI:
 
 [infra/oci-infra.md](infra/oci-infra.md)
 
