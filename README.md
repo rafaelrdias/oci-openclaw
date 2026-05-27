@@ -325,7 +325,7 @@ openclaw agent --agent odin --message "Use web_search para trazer uma fonte atua
 
 Para a Control UI, se aparecer `Auth required`, configure um `OPENCLAW_GATEWAY_TOKEN` no `~/.openclaw/gateway.systemd.env` e use esse valor no campo `Gateway Token` ou no fragmento `#token=...` da URL. Em SSH/headless, `openclaw config get gateway.auth.token` pode retornar `__OPENCLAW_REDACTED__`, e isso e esperado.
 
-Se o Mac hibernar, o Gateway no servidor continua ativo, mas o tunel SSH local cai. O guia [POST_DEPLOY.md](infra/terraform/oci-trial-deploy/POST_DEPLOY.md) inclui um LaunchAgent de macOS para recriar automaticamente o tunel `127.0.0.1:18789 -> servidor:18789` ao iniciar a sessao ou depois de uma queda.
+Se o computador hibernar, o Gateway no servidor continua ativo, mas o tunel SSH local cai. O guia [POST_DEPLOY.md](infra/terraform/oci-trial-deploy/POST_DEPLOY.md) inclui um exemplo LaunchAgent de macOS para recriar automaticamente o tunel `127.0.0.1:18789 -> servidor:18789` ao iniciar a sessao ou depois de uma queda.
 
 O Terraform pode receber variaveis nao secretas antes do `apply`, como regiao, porta, modelo, `oci_responses_project_ocid` e `openai_base_url`. Ja chaves como `OCI_RESPONSES_API_KEY`, `OPENAI_API_KEY` e tokens de provedores devem ficar fora do Terraform para nao entrarem em state, metadados da instancia ou historico do Resource Manager.
 
